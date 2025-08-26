@@ -3,27 +3,45 @@ import sys
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+import logging as log
+import argparse
 
 __GOOGLE_MODEL__ = "gemini-2.0-flash-001"
 
+def initArgs() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="Boot dev - AI Agent", description="A simple ai agent using Google")
+    parser.add_argument("prompt", help="Store the user input prompt")
+    parser.add_argument("--verbose", action="store_true", help="Enable debug logging")
+    return parser
+
+
+def loggerInit(logger : log.Logger, level: int) -> log.Logger:
+    if log.getLevelName(level).startswith("Level"):
+        raise ValueError("Invalid log level!")
+    logger.setLevel(level)
+    return logger
+
+
 def main():
-    
+    level = log.INFO
+    arguments = initArgs().parse_args()
+    if arguments.verbose:
+        level = log.DEBUG
+    logger = loggerInit(log.getLogger(), level)
     load_dotenv()
     api_key = os.environ.get("GEMINI_API_KEY")
     client = genai.Client(api_key=api_key)
-    if len(sys.argv) < 2:
-        print("No phrase supplied!")
-        sys.exit(1)
-    user_prompt = sys.argv[1]
+    user_prompt = arguments.prompt
     messages = [types.Content(role="user", parts=[types.Part(text=user_prompt)]),
                 ]
     # content = "Why is Boot.dev such a great place to learn backend development? Use one paragraph maximum."
     resp = client.models.generate_content(
         model=__GOOGLE_MODEL__,
         contents=messages,)
-    print(resp.text)
-    print(f"Prompt tokens: {resp.usage_metadata.prompt_token_count}")
-    print(f"Response tokens: {resp.usage_metadata.candidates_token_count}")
+    log.info(resp.text)
+    log.debug(f"User prompt: {arguments.prompt}")
+    log.debug(f"Prompt tokens: {resp.usage_metadata.prompt_token_count}")
+    log.debug(f"Response tokens: {resp.usage_metadata.candidates_token_count}")
 
 if __name__ == "__main__":
     main()
