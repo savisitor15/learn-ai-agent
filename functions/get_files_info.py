@@ -1,5 +1,13 @@
 import os
 from pathlib import Path
+
+def _limit_directory(working_directory:str, full_path:str) -> bool:
+    ap = os.path.abspath(full_path)
+    wp = os.path.abspath(working_directory)
+    if os.path.commonprefix([ap, wp]) != wp:
+        return True
+    return False
+
 def _file_output(parent_dir):
     p = Path(parent_dir)
     output = ""
@@ -15,11 +23,12 @@ def _file_info_heading(directory):
 
 
 def get_files_info(working_directory, directory="."):
-    full_path = os.path.join(working_directory, directory)
-    ap = os.path.abspath(full_path)
-    wp = os.path.abspath(working_directory)
-    if os.path.commonprefix([ap, wp]) != wp:
-        return f'Error: Cannot list "{directory}" as it is outside the permitted working directory'
-    if not os.path.isdir(full_path):
-        return f'Error: "{directory}" is not a directory'
-    return _file_info_heading(directory) + _file_output(full_path)
+    try:
+        full_path = os.path.join(working_directory, directory)
+        if _limit_directory(working_directory, full_path):
+            return f'Error: Cannot list "{directory}" as it is outside the permitted working directory'
+        if not os.path.isdir(full_path):
+            return f'Error: "{directory}" is not a directory'
+        return _file_info_heading(directory) + _file_output(full_path)
+    except Exception as err:
+        return f'Error: {err}, {type(err)}'
