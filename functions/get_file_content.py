@@ -1,6 +1,6 @@
 import os
 from .config import MAX_CHARS
-from .get_files_info import _limit_directory
+from .common import _limit_directory
 
 
 def get_file_content(working_directory, file_path):

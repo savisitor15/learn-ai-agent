@@ -1,12 +1,6 @@
 import os
 from pathlib import Path
-
-def _limit_directory(working_directory:str, full_path:str) -> bool:
-    ap = os.path.abspath(full_path)
-    wp = os.path.abspath(working_directory)
-    if os.path.commonprefix([ap, wp]) != wp:
-        return True
-    return False
+from .common import _limit_directory
 
 def _file_output(parent_dir):
     p = Path(parent_dir)
