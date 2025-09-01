@@ -5,6 +5,7 @@ from google import genai
 from google.genai import types
 import logging as log
 import argparse
+from config import SYSTEMPROMPT
 
 __GOOGLE_MODEL__ = "gemini-2.0-flash-001"
 
@@ -23,6 +24,7 @@ def loggerInit(logger : log.Logger, level: int) -> log.Logger:
 
 
 def main():
+    system_prompt = SYSTEMPROMPT
     level = log.INFO
     arguments = initArgs().parse_args()
     if arguments.verbose:
@@ -37,7 +39,8 @@ def main():
     # content = "Why is Boot.dev such a great place to learn backend development? Use one paragraph maximum."
     resp = client.models.generate_content(
         model=__GOOGLE_MODEL__,
-        contents=messages,)
+        contents=messages,
+        config=types.GenerateContentConfig(system_instruction=system_prompt))
     log.info(resp.text)
     log.debug(f"User prompt: {arguments.prompt}")
     log.debug(f"Prompt tokens: {resp.usage_metadata.prompt_token_count}")
