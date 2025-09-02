@@ -6,6 +6,7 @@ from google.genai import types
 import logging as log
 import argparse
 from config import SYSTEMPROMPT
+from functions.get_files_info import schema_get_files_info
 
 __GOOGLE_MODEL__ = "gemini-2.0-flash-001"
 
@@ -26,6 +27,11 @@ def loggerInit(logger : log.Logger, level: int) -> log.Logger:
 def main():
     system_prompt = SYSTEMPROMPT
     level = log.INFO
+    available_functions = types.Tool(
+        function_declarations=[
+            schema_get_files_info,
+        ]
+    )
     arguments = initArgs().parse_args()
     if arguments.verbose:
         level = log.DEBUG
@@ -37,10 +43,16 @@ def main():
     messages = [types.Content(role="user", parts=[types.Part(text=user_prompt)]),
                 ]
     # content = "Why is Boot.dev such a great place to learn backend development? Use one paragraph maximum."
+    config = types.GenerateContentConfig(
+        tools=[available_functions], system_instruction=system_prompt
+        )
     resp = client.models.generate_content(
         model=__GOOGLE_MODEL__,
         contents=messages,
-        config=types.GenerateContentConfig(system_instruction=system_prompt))
+        config=config)
+    if (resp.function_calls != None):
+        for function_call_part in resp.function_calls:
+            log.info(f"Calling function: {function_call_part.name}({function_call_part.args})")
     log.info(resp.text)
     log.debug(f"User prompt: {arguments.prompt}")
     log.debug(f"Prompt tokens: {resp.usage_metadata.prompt_token_count}")
