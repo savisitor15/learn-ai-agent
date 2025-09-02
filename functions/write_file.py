@@ -1,5 +1,26 @@
 import os
 from .common import _limit_directory
+from google.genai import types
+
+
+schema_write_file = types.FunctionDeclaration(
+    name="write_file",
+    description="Write text to a provided file path, constrained to the working directory.",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="The path to the file to be written, relative to the working directory.",
+            ),
+            "content": types.Schema(
+                type = types.Type.STRING,
+                description="Text to be written into the provided file path"
+            ),
+        },
+        required=["file_path", "content"]
+    ),
+)
 
 def write_file(working_directory, file_path, content):
     full_path = os.path.join(working_directory, file_path)

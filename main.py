@@ -5,10 +5,9 @@ from google import genai
 from google.genai import types
 import logging as log
 import argparse
-from config import SYSTEMPROMPT
-from functions.get_files_info import schema_get_files_info
+from prompts import SYSTEMPROMPT
+from call_functions import available_functions
 
-__GOOGLE_MODEL__ = "gemini-2.0-flash-001"
 
 def initArgs() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="Boot dev - AI Agent", description="A simple ai agent using Google")
@@ -27,11 +26,7 @@ def loggerInit(logger : log.Logger, level: int) -> log.Logger:
 def main():
     system_prompt = SYSTEMPROMPT
     level = log.INFO
-    available_functions = types.Tool(
-        function_declarations=[
-            schema_get_files_info,
-        ]
-    )
+    
     arguments = initArgs().parse_args()
     if arguments.verbose:
         level = log.DEBUG
@@ -43,20 +38,27 @@ def main():
     messages = [types.Content(role="user", parts=[types.Part(text=user_prompt)]),
                 ]
     # content = "Why is Boot.dev such a great place to learn backend development? Use one paragraph maximum."
-    config = types.GenerateContentConfig(
-        tools=[available_functions], system_instruction=system_prompt
-        )
+    generate_contents(client, messages)
+    log.debug(f"User prompt: {arguments.prompt}")
+    
+
+def generate_contents(client, messages):
+    
     resp = client.models.generate_content(
-        model=__GOOGLE_MODEL__,
+        model="gemini-2.0-flash-001",
         contents=messages,
-        config=config)
+        config=types.GenerateContentConfig(
+            tools=[available_functions], system_instruction=SYSTEMPROMPT
+        ),
+        )
     if (resp.function_calls != None):
         for function_call_part in resp.function_calls:
             log.info(f"Calling function: {function_call_part.name}({function_call_part.args})")
-    log.info(resp.text)
-    log.debug(f"User prompt: {arguments.prompt}")
+    else:
+        log.info(resp.text)
     log.debug(f"Prompt tokens: {resp.usage_metadata.prompt_token_count}")
     log.debug(f"Response tokens: {resp.usage_metadata.candidates_token_count}")
+
 
 if __name__ == "__main__":
     main()
