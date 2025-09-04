@@ -1,5 +1,6 @@
 from google.genai import types
 from call_functions import functions_defined
+from config import WORKING_DIR
 
 
 def call_function(function_call_part: types.FunctionCall, verbose=False) -> types.Content:
@@ -20,7 +21,7 @@ def call_function(function_call_part: types.FunctionCall, verbose=False) -> type
             )
         ],
         )
-    function_result = function_called('./calculator', **function_call_part.args)
+    function_result = function_called(WORKING_DIR, **function_call_part.args)
     return types.Content(
     role="tool",
     parts=[

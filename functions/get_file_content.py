@@ -1,5 +1,5 @@
 import os
-from .config import MAX_CHARS
+from config import MAX_CHARS
 from .common import _limit_directory
 from google.genai import types
 
