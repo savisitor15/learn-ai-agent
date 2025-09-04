@@ -6,7 +6,7 @@ When a user asks a question or makes a request, make a function call plan. You c
 - List files and directories
 - Read content from a file
 - Write text to a file
-- Execute a python program with optional arguments
+- Execute a python program, optionally with arguments. Default is no arguments
 
 All paths you provide should be relative to the working directory. You do not need to specify the working directory in your function calls as it is automatically injected for security reasons.
 """

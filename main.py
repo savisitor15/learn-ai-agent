@@ -7,6 +7,7 @@ import logging as log
 import argparse
 from prompts import SYSTEMPROMPT
 from call_functions import available_functions
+from call_function import call_function
 
 
 def initArgs() -> argparse.ArgumentParser:
@@ -24,7 +25,6 @@ def loggerInit(logger : log.Logger, level: int) -> log.Logger:
 
 
 def main():
-    system_prompt = SYSTEMPROMPT
     level = log.INFO
     
     arguments = initArgs().parse_args()
@@ -38,11 +38,11 @@ def main():
     messages = [types.Content(role="user", parts=[types.Part(text=user_prompt)]),
                 ]
     # content = "Why is Boot.dev such a great place to learn backend development? Use one paragraph maximum."
-    generate_contents(client, messages)
+    generate_contents(client, messages, arguments.verbose)
     log.debug(f"User prompt: {arguments.prompt}")
     
 
-def generate_contents(client, messages):
+def generate_contents(client, messages, verbose=False):
     
     resp = client.models.generate_content(
         model="gemini-2.0-flash-001",
@@ -54,6 +54,11 @@ def generate_contents(client, messages):
     if (resp.function_calls != None):
         for function_call_part in resp.function_calls:
             log.info(f"Calling function: {function_call_part.name}({function_call_part.args})")
+        function_call_result = call_function(function_call_part, verbose)
+        if not function_call_result.parts or len(function_call_result.parts) == 0:
+            raise ValueError("Function call failed to return parts member")
+        log.debug(f"-> {function_call_result.parts[0].function_response.response}")
+
     else:
         log.info(resp.text)
     log.debug(f"Prompt tokens: {resp.usage_metadata.prompt_token_count}")
